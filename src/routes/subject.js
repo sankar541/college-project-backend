@@ -4,7 +4,7 @@ const router = express.Router();
 const {
   createSubject,
   getAllSubjects
-} = require("../controllers/subject");
+} = require("../controllers/Subject");
 
 const { protect, restrictTo } = require("../middleware/jwt");
 
