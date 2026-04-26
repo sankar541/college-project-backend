@@ -26,11 +26,10 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const token = generateToken(user);
 
-  // ✅ FIX FOR CROSS (ONLY CHANGE)
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: true,          // 🔥 changed
-    sameSite: "none",      // 🔥 changed
+    secure: false,
+    sameSite: "lax",
     maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
@@ -56,17 +55,17 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
+
   if (!isMatch) {
     return next(new appError("Invalid email or password", 401));
   }
 
   const token = generateToken(user);
 
-  // ✅ FIX FOR CROSS
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: false,
+    sameSite: "lax",
     maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
@@ -81,15 +80,15 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.logout = (req, res) => {
   res.clearCookie("jwt", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: false,
+    sameSite: "lax",
   });
 
   res.status(200).json({
     status: "success",
     message: "Logged out successfully",
   });
-});
+};
 
 // ================= UPDATE PASSWORD =================
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -110,11 +109,10 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   const token = generateToken(user);
 
-  // ✅ FIX FOR CROSS
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: false,
+    sameSite: "lax",
     maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
