@@ -11,7 +11,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["https://college-project-frontend-cyan.vercel.app/","http://localhost:5173","http://localhost:5174" ],
+    origin: ["https://college-project-frontend-cyan.vercel.app","http://localhost:5173","http://localhost:5174" ],
     credentials: true,
   })
 );
