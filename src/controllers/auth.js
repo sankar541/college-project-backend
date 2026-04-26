@@ -2,12 +2,11 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const catchAsync = require("../utils/catchAsync");
 const appError = require("../utils/appError");
-const  generateToken  = require("../utils/generateToken");
+const generateToken = require("../utils/generateToken");
 
 // ================= SIGNUP =================
 exports.signup = catchAsync(async (req, res, next) => {
   const { name, email, password, role } = req.body;
-
 
   if (!name || !email || !password) {
     return next(new appError("All fields are required", 400));
@@ -22,16 +21,17 @@ exports.signup = catchAsync(async (req, res, next) => {
     name,
     email,
     password,
-    role: role || "student", // default role
+    role: role || "student",
   });
 
   const token = generateToken(user);
 
+  // ✅ FIXED COOKIE CONFIG
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 14 * 24 * 60 * 60 * 1000, // 7 days
+    secure: false, // ✅ force false for now
+    sameSite: "lax", // ✅ important
+    maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
   res.status(201).json({
@@ -62,10 +62,11 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const token = generateToken(user);
 
+  // ✅ FIXED COOKIE CONFIG
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: false,
+    sameSite: "lax",
     maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
@@ -80,8 +81,8 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.logout = (req, res) => {
   res.clearCookie("jwt", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: false,
+    sameSite: "lax",
   });
 
   res.status(200).json({
@@ -93,36 +94,47 @@ exports.logout = (req, res) => {
 // ================= UPDATE PASSWORD =================
 exports.updatePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, newPassword } = req.body;
+
   if (!currentPassword || !newPassword) {
     return next(new appError("Provide current and new passwords.", 400));
   }
 
   const user = await User.findById(req.user._id).select("+password");
+
   if (!user || !(await bcrypt.compare(currentPassword, user.password))) {
     return next(new appError("Incorrect current password.", 401));
   }
 
   user.password = newPassword;
-  await user.save(); // pre-save hook handles hashing
+  await user.save();
 
-  // Issue a fresh token natively verifying local secure states
   const token = generateToken(user);
+
+  // ✅ FIXED COOKIE CONFIG
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: false,
+    sameSite: "lax",
     maxAge: 14 * 24 * 60 * 60 * 1000,
   });
 
-  res.status(200).json({ status: "success", message: "Password updated safely." });
+  res.status(200).json({
+    status: "success",
+    message: "Password updated safely.",
+  });
 });
 
-// ================= UPDATE PROFILE (Photo) =================
+// ================= UPDATE PROFILE =================
 exports.updateProfile = catchAsync(async (req, res, next) => {
   const { photo } = req.body;
-  
-  if (photo && photo.length > 5000000) { // Limit Base64 length ~5MB strictly securely
-    return next(new appError("Image payload exceeds 5MB limit. Please downscale the image.", 400));
+
+  if (photo && photo.length > 5000000) {
+    return next(
+      new appError(
+        "Image payload exceeds 5MB limit. Please downscale the image.",
+        400
+      )
+    );
   }
 
   const user = await User.findByIdAndUpdate(
@@ -133,6 +145,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: "success",
-    user
+    user,
   });
 });
